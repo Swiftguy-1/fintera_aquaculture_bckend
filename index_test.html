@@ -1,0 +1,115 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin System Test</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .error { color: red; margin-top: 10px; font-size: 14px; }
+        .success { color: green; font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. The Login Box View -->
+    <div id="login-view" class="card">
+        <h2>Admin Login</h2>
+        <input type="text" id="username" placeholder="Username (admin)">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="handleLogin()">Login</button>
+        <div id="login-error" class="error"></div>
+    </div>
+
+    <!-- 2. The Secure Dashboard View -->
+    <div id="dashboard-view" class="card hidden">
+        <h2>Secure Vault</h2>
+        <p class="success" id="welcome-msg"></p>
+        <p id="secret-data" style="background: #eee; padding: 10px; border-radius: 4px;"></p>
+        <button onclick="handleLogout()" style="background: #dc3545;">Log Out</button>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        async function handleLogin() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            const errorDiv = document.getElementById("login-error");
+            errorDiv.innerText = "";
+
+            // FastAPI expects login data formatted as standard Form Data (OAuth2 requirement)
+            const formData = new URLSearchParams();
+            formData.append("username", user);
+            formData.append("password", pass);
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error("Invalid username or password");
+                }
+
+                const data = await response.json();
+                console.log("Received token:", data.access_token);
+                // Save the digital keycard token inside browser storage
+                localStorage.setItem("admin_token", data.access_token);
+                
+                // Load the dashboard view
+                loadDashboard();
+            } catch (err) {
+                errorDiv.innerText = err.message;
+            }
+        }
+
+        async function loadDashboard() {
+            const token = localStorage.getItem("admin_token");
+            if (!token) return;
+
+            try {
+                // Fetch the secure dashboard data, sending the token inside the Authorization header
+                const response = await fetch(`${API_URL}/admin/dashboard`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Could not validate credentials");
+                }
+
+                const data = await response.json();
+
+                // Swap the UI views to display the vault data
+                document.getElementById("login-view").classList.add("hidden");
+                document.getElementById("dashboard-view").classList.remove("hidden");
+                document.getElementById("welcome-msg").innerText = data.message;
+                document.getElementById("secret-data").innerText = `Vault Data: ${data.secret_data}`;
+            } catch (err) {
+                handleLogout();
+            }
+        }
+
+        function handleLogout() {
+            // Wipe the token from browser memory
+            localStorage.removeItem("admin_token");
+            document.getElementById("login-view").classList.remove("hidden");
+            document.getElementById("dashboard-view").classList.add("hidden");
+        }
+
+        // Check automatically if the user is already logged in when opening the page
+        if (localStorage.getItem("admin_token")) {
+            loadDashboard();
+        }
+    </script>
+</body>
+</html>
