@@ -5,7 +5,7 @@ from admin_auth import verify_password, get_password_hash, create_access_token
 from dependencies import get_current_user
 from pydantic import BaseModel, EmailStr
 from db import supabase
-
+from routes import router as data_router
 app=FastAPI(title="User Dashboard Security System")
 
 app.add_middleware(
@@ -16,6 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(data_router)
 
 class AdminSignUp(BaseModel):
     fullname: str
@@ -36,7 +37,7 @@ def signup(admin_data: AdminSignUp):
         if check_user_existence.data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already exists"
+                detail="Email already registered. Please use a different email or login instead."
             )
 
         hashed_admin_pass= get_password_hash(admin_data.password)
@@ -48,6 +49,7 @@ def signup(admin_data: AdminSignUp):
 
         supabase.table("admin_table").insert(new_admin).execute()
         return {"status": "success", "message": "User registered succesfully"}
+
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
@@ -81,7 +83,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 headers={"WWW-Authenticate": "Bearer"}
         )
 
-        db_admin= admin_list[0]
+        db_admin = admin_list[0]
 
         if not verify_password(form_data.password, db_admin["password"]):
             raise HTTPException(
@@ -90,6 +92,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 headers={"WWW-Authenticate": "Bearer"}
 
             )
+        access_token = create_access_token(data={"sub": db_admin["email"]})
+        return {
+        "access_token": access_token,
+         "token_type": "bearer"
+         }
+   
     except HTTPException as http_err:
         raise http_err
     except Exception as error:

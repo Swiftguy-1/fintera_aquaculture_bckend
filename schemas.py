@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import date
 
 class Feeds(BaseModel):
   feed_name: str
@@ -8,10 +9,14 @@ class Feeds(BaseModel):
 
 class ponds(BaseModel):
   pond_name: str
-  pond_size: float
+  pond_stock_quantity: float
+  species_in_pond: str
+  last_harvest_date: date
   pond_type: str
   pond_location: str
   pond_status: str
+  water_temp: str
+  pond_capacity: float
 
 class Finance_cost(BaseModel):
   pond_id: int
