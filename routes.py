@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from dependencies import get_current_user
 from supabase import Client
 from schemas import Feeds, Finance_sales, Finance_cost, ponds, Fish_stock
 from db import supabase
@@ -17,7 +18,9 @@ def get_ponds():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching ponds data or ponds could not be found.")
 
 @router.post("/ponds", status_code=201)
-def create_pond(pond: ponds):
+def create_pond(pond: ponds,
+                 current_user: str = Depends(get_current_user)
+):
     try:
         check_existing_pond = supabase.table("Ponds").select("*").eq("pond_name", pond.pond_name).execute()
 
@@ -28,6 +31,8 @@ def create_pond(pond: ponds):
             )
 
         data = pond.model_dump(mode='json')
+        data["recorded_by"] = current_user
+
         response = supabase.table("Ponds").insert(data).execute()
         return response.data[0]
         
@@ -35,7 +40,8 @@ def create_pond(pond: ponds):
         raise http_err
     except Exception as error:
         print("Pond creation error details:", error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating pond or pond could not be created.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating pond or pond could not be created."
+    )
 @router.patch("/ponds/{pond_id}", status_code=200)
 def update_pond(pond_id: int, updates: dict):
     try:
@@ -98,13 +104,3 @@ def get_fish_stock():
         print("Error Details:", error)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching fish stock data or fish stock could not be found.")
 
-@router.get("/mortality_logs")
-def get_mortality_logs():
-    response6 = supabase.table("Mortality_Logs").select("*").execute()
-    print("Response from Mortality_Logs table:", response6)
-    try:
-        if response6 is not None:
-            return response6.data
-    except Exception as error:
-        print("Error Details:", error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching mortality logs data or mortality logs could not be found.")

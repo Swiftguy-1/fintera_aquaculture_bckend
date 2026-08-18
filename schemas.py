@@ -37,3 +37,9 @@ class Fish_stock(BaseModel):
   current_quantity: int
   stocking_date: int
   Average_weight: float
+
+class mortality(BaseModel):
+  Mortality_count: int 
+  pond_name: str
+  suspected_cause: str
+  species: str
