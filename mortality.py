@@ -25,7 +25,18 @@ def record_mortality(
 @router.get("/")
 def get_mortality_records(current_user: dict = Depends(get_current_user)):
     try:
-        response = supabase.table("Mortality_logs").select("*").execute()
+        response = (
+            supabase.table("Mortality_logs")
+            .select("*")
+            .eq("recorded_by", current_user)
+            .execute()
+        )
+        if not response.data:
+            return {
+                "status": "success",
+                "message": "You have no mortality records yet. Try creating one.",
+                "data": []
+            }
         return {"status": "success", "data": response.data}
 
     except Exception as e:

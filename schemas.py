@@ -43,3 +43,10 @@ class mortality(BaseModel):
   pond_name: str
   suspected_cause: str
   species: str
+
+class harvest(BaseModel):
+  pond_name: str
+  species: str
+  harvest_quantity: int
+  total_weight: float
+  harvest_date: date
