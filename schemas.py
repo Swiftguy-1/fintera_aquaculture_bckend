@@ -50,3 +50,13 @@ class harvest(BaseModel):
   harvest_quantity: int
   total_weight: float
   harvest_date: date
+  method_of_harvest: str
+
+class stock_records(BaseModel):
+  pond_name: str
+  species: str
+  quantity: int
+  average_weight: float
+  stocking_date: date
+  supplier: str
+  status: str

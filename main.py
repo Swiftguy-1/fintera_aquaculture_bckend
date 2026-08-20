@@ -8,6 +8,7 @@ from db import supabase
 from routes import router as data_router
 from  mortality import router as mortality_router
 from harvest import router as harvest_router
+from stock_records import router as stock_router
 app=FastAPI(title="User Dashboard Security System")
 
 app.add_middleware(
@@ -21,6 +22,7 @@ app.add_middleware(
 app.include_router(data_router)
 app.include_router(mortality_router)
 app.include_router(harvest_router)
+app.include_router(stock_router)
 
 class AdminSignUp(BaseModel):
     fullname: str
