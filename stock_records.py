@@ -24,7 +24,7 @@ def stocking_records(stock_record: stock_records, current_user: str = Depends(ge
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create stock record"
         )
-@router.get("/", status_code=status.HTTP_201_CREATED)
+@router.get("/", status_code=status.HTTP_200_OK)
 
 def get_stock_records (current_user: str = Depends(get_current_user)):
     try:

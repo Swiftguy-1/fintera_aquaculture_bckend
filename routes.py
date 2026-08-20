@@ -1,28 +1,24 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from dependencies import get_current_user
 from supabase import Client
-from schemas import Feeds, Finance_sales, Finance_cost, ponds, Fish_stock
+from schemas import Finance_sales, Finance_cost, ponds, Fish_stock
 from db import supabase
 router= APIRouter()
 
 
 @router.get("/ponds")
-def get_ponds():
-    response1 = supabase.table("Ponds").select("*").execute()
-    print("Response from Ponds table:", response1)
+def get_ponds(current_user: str = Depends(get_current_user)):
     try:
-        if response1 is not None:
-            return response1.data
+        response1 = supabase.table("Ponds").select("*").eq("recorded_by", current_user).eq("is_deleted", False).execute()
+        return response1.data
     except Exception as error:
         print("Error Details:", error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching ponds data or ponds could not be found.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching ponds data.")
 
-@router.post("/ponds", status_code=201)
-def create_pond(pond: ponds,
-                 current_user: str = Depends(get_current_user)
-):
+@router.post("/ponds", status_code=status.HTTP_201_CREATED)
+def create_pond(pond: ponds, current_user: str = Depends(get_current_user)):
     try:
-        check_existing_pond = supabase.table("Ponds").select("*").eq("pond_name", pond.pond_name).execute()
+        check_existing_pond = supabase.table("Ponds").select("*").eq("pond_name", pond.pond_name).eq("recorded_by", current_user).execute()
 
         if check_existing_pond.data:
             raise HTTPException(
@@ -40,37 +36,44 @@ def create_pond(pond: ponds,
         raise http_err
     except Exception as error:
         print("Pond creation error details:", error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating pond or pond could not be created."
-    )
-@router.patch("/ponds/{pond_id}", status_code=200)
-def update_pond(pond_id: int, updates: dict):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating pond.")
+
+@router.patch("/ponds/{pond_id}", status_code=status.HTTP_200_OK)
+def update_pond(pond_id: int, updates: dict, current_user: str = Depends(get_current_user)):
     try:
-        response = supabase.table("Ponds").update(updates).eq("id", pond_id).execute()
-        return response.data
+        # Check if record exists and belongs to this user
+        existing = supabase.table("Ponds").select("*").eq("id", pond_id).eq("recorded_by", current_user).execute()
+        if not existing.data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pond not found or unauthorized.")
+
+        # Attach updated_by tag alongside updates
+        updates["updated_by"] = current_user
+        response = supabase.table("Ponds").update(updates).eq("id", pond_id).eq("recorded_by", current_user).execute()
+        return response.data[0]
+        
+    except HTTPException as http_err:
+        raise http_err
     except Exception as error:
         print("Pond update error details:", error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating pond or pond could not be updated.")
-    
-@router.delete("/ponds/{pond_id}", status_code=200)
-def delete_pond(pond_id: int):
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating pond.")
+
+@router.delete("/ponds/{pond_id}", status_code=status.HTTP_200_OK)
+def delete_pond(pond_id: int, current_user: str = Depends(get_current_user)):
     try:
-        response = supabase.table("Ponds").update({"is_deleted": True}).eq("id", pond_id).execute()
-        return {"message": f"Pond with ID {pond_id} has been deleted successfully."}
+        # Check if record exists and belongs to this user
+        existing = supabase.table("Ponds").select("*").eq("id", pond_id).eq("recorded_by", current_user).execute()
+        if not existing.data:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pond not found or unauthorized.")
+
+        # Soft delete record
+        response = supabase.table("Ponds").update({"is_deleted": True, "deleted_by": current_user}).eq("id", pond_id).eq("recorded_by", current_user).execute()
+        return {"message": f"Pond with ID {pond_id} deleted successfully."}
+        
+    except HTTPException as http_err:
+        raise http_err
     except Exception as error:
         print("Pond deletion error details:", error)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error deleting pond or pond could not be deleted.")
-
-@router.get("/feeds")
-def get_feeds():
-    response2 = supabase.table("Feeds").select("*").execute()
-    print("Response from Feeds table:", response2)
-    try:
-        if response2 is not None:
-            return response2.data
-    except Exception as error:
-        print("Error Details:", error)  
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching feeds data or feeds could not be found.")
-
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error deleting pond.")
 @router.get("/cost")
 def get_cost():
     response3 = supabase.table("Finance_cost").select("*").execute()

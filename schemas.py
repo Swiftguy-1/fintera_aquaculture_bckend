@@ -1,11 +1,17 @@
 from pydantic import BaseModel
 from datetime import date
 
-class Feeds(BaseModel):
+class Feed_inventory(BaseModel):
   feed_name: str
-  weight: float
-  feed_cost: float
-  current_bags_stock: int
+  feed_type: str
+  quantity: int
+  av_weight_per_bag: float
+  feed_cost_per_bag: float
+  feed_total_cost: float
+  supplier: str
+  expiry_date: date
+  purchase_date: date
+  status: str
 
 class ponds(BaseModel):
   pond_name: str
