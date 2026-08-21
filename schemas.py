@@ -23,6 +23,7 @@ class ponds(BaseModel):
   pond_status: str
   water_temp: str
   pond_capacity: float
+  pH_level: float
 
 class Finance_cost(BaseModel):
   pond_id: int
