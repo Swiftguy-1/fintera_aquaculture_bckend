@@ -42,7 +42,7 @@ class Fish_stock(BaseModel):
   species: str
   initial_quantity: int
   current_quantity: int
-  stocking_date: int
+  stocking_date: date
   Average_weight: float
 
 class mortality(BaseModel):
@@ -67,3 +67,11 @@ class stock_records(BaseModel):
   stocking_date: date
   supplier: str
   status: str
+
+class feeding_logs(BaseModel):
+  pond_name: str
+  species: str
+  feed_type: str
+  feed_quantity: int
+  feeding_date: date
+  feed_cost: float

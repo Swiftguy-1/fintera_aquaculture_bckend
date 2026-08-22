@@ -10,6 +10,8 @@ from  mortality import router as mortality_router
 from harvest import router as harvest_router
 from stock_records import router as stock_router
 from feed_inventory import router as feed_inventory_router
+from feeding_logs import router as feeding_logs_router
+
 app=FastAPI(title="User Dashboard Security System")
 
 app.add_middleware(
@@ -25,6 +27,7 @@ app.include_router(mortality_router)
 app.include_router(harvest_router)
 app.include_router(stock_router)
 app.include_router(feed_inventory_router)
+app.include_router(feeding_logs_router)
 
 class AdminSignUp(BaseModel):
     fullname: str
