@@ -12,6 +12,6 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-from routes import router 
+from routes import router
 
 app.include_router(router)

@@ -1,18 +1,23 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from admin_auth import verify_password, get_password_hash, create_access_token 
+from admin_auth import verify_password, get_password_hash, create_access_token
 from dependencies import get_current_user
 from pydantic import BaseModel, EmailStr
 from db import supabase
-from routes import router as data_router
-from  mortality import router as mortality_router
+from mortality import router as mortality_router
 from harvest import router as harvest_router
 from stock_records import router as stock_router
 from feed_inventory import router as feed_inventory_router
 from feeding_logs import router as feeding_logs_router
+from invoice import router as invoice_router
+from ponds import router as ponds_router
+from feeding_schedule import router as schedule_router
+from expenses import router as exp_router
+from sales import router as sales_router
+from growth_rate import router as growth_router
 
-app=FastAPI(title="User Dashboard Security System")
+app = FastAPI(title="User Dashboard Security System")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,22 +27,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(data_router)
 app.include_router(mortality_router)
 app.include_router(harvest_router)
 app.include_router(stock_router)
 app.include_router(feed_inventory_router)
 app.include_router(feeding_logs_router)
+app.include_router(invoice_router)
+app.include_router(ponds_router)
+app.include_router(schedule_router)
+app.include_router(exp_router)
+app.include_router(sales_router)
+app.include_router(growth_router)
+
 
 class AdminSignUp(BaseModel):
     fullname: str
     email: EmailStr
     password: str
 
-@app.post('/signup', status_code=status.HTTP_201_CREATED)
+
+@app.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(admin_data: AdminSignUp):
     try:
-        check_user_existence= (
+        check_user_existence = (
             supabase.table("admin_table")
             .select("*")
             .eq("email", admin_data.email)
@@ -48,14 +60,14 @@ def signup(admin_data: AdminSignUp):
         if check_user_existence.data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered. Please use a different email or login instead."
+                detail="Email already registered. Please use a different email or login instead.",
             )
 
-        hashed_admin_pass= get_password_hash(admin_data.password)
-        new_admin= {
+        hashed_admin_pass = get_password_hash(admin_data.password)
+        new_admin = {
             "name": admin_data.fullname,
             "email": admin_data.email,
-            "password": hashed_admin_pass
+            "password": hashed_admin_pass,
         }
 
         supabase.table("admin_table").insert(new_admin).execute()
@@ -66,32 +78,28 @@ def signup(admin_data: AdminSignUp):
     except Exception as error:
         print("Signup Error:", error)
         raise HTTPException(
-            status_code= status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An Error occured during signup"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An Error occured during signup",
         )
 
 
-
-@app.post('/login')
+@app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         user_email = form_data.username
 
         response = (
-            supabase.table("admin_table")
-            .select("*")
-            .eq("email", user_email)
-            .execute()
+            supabase.table("admin_table").select("*").eq("email", user_email).execute()
         )
 
         admin_list = response.data
 
         if not admin_list:
             raise HTTPException(
-                status_code= status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"}
-        )
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         db_admin = admin_list[0]
 
@@ -99,33 +107,30 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"}
-
+                headers={"WWW-Authenticate": "Bearer"},
             )
         access_token = create_access_token(data={"sub": db_admin["email"]})
-        return {
-        "access_token": access_token,
-         "token_type": "bearer"
-         }
-   
+        return {"access_token": access_token, "token_type": "bearer"}
+
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
         print("Login Error:", error)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occured during login"
+            detail="An error occured during login",
         )
 
 
-@app.get('/admin/dashboard')
+@app.get("/admin/dashboard")
 def dashboard(current_admin: str = Depends(get_current_user)):
     return {
-      "status": "success",
-      "message": f'Welcome back, {current_admin}! You Have logged into your dashboard successfully.',
-      "secret_data": "Sensors Nominal. System Online. All systems operational."
-    }  
+        "status": "success",
+        "message": f"Welcome back, {current_admin}! You Have logged into your dashboard successfully.",
+        "secret_data": "Sensors Nominal. System Online. All systems operational.",
+    }
+
 
 @app.get("/health")
 def health_checkup():
-    return{"status": "ok"}
+    return {"status": "ok"}

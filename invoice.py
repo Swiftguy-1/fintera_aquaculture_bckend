@@ -1,58 +1,59 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from db import supabase
 from dependencies import get_current_user
-from schemas import stock_records
+from schemas import invoices
 
-router = APIRouter(prefix="/stock", tags=["stock"])
+router = APIRouter(prefix="/invoices", tags=["invoices"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def stocking_records(
-    stock_record: stock_records, current_user: str = Depends(get_current_user)
-):
+def create_invoice(invoice: invoices, current_user: str = Depends(get_current_user)):
     try:
-        data = stock_record.model_dump(mode="json")
+        data = invoice.model_dump(mode="json")
         data["recorded_by"] = current_user
-        response = supabase.table("stocking_records").insert(data).select("stock_id, pond_name, species, quantity, average_weight, stocking_date, supplier, status").execute()
+        response = supabase.table("Invoices").insert(data).select("invoice_id, customer, date, due_date, amount, status").execute()
         return response.data[0]
-
     except Exception as error:
-        print("Stock Error Details:", error)
+        print("Invoice Error Details:", error)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create stock record",
+            detail="Error creating invoice or invoice could not be created.",
         )
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def get_stock_records(current_user: str = Depends(get_current_user)):
+def get_invoices(current_user: str = Depends(get_current_user)):
     try:
+
         response = (
-            supabase.table("stocking_records")
-            .select("stock_id, pond_name, species, quantity, average_weight, stocking_date, supplier, status")
+            supabase.table("Invoices")
+            .select("invoice_id, customer, date, due_date, amount, status")
+            .or_("is_deleted.is.null,is_deleted.eq.false")
             .eq("recorded_by", current_user)
-            .or_("is_deleted.is.null,is_deleted.eq.false") 
             .execute()
         )
+
         if not response.data:
             return {
-                "status": "success",
-                "message": "You have no stock records yet. Try creating one.",
+                "status": "Success",
+                "message": "You don't have any recorded invoices yet, try creating one",
                 "data": [],
             }
-        return {"status": "success", "data": response.data}
+
+        return {"status": "Success", "data": response.data}
 
     except Exception as error:
-        print("Stock Error Details:", error)
+        print("Invoice Error Details:", error)
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch stock records",
+            detail="Error fetching invoices or Invoices couldn't be found.",
         )
 
 
-@router.patch("/{stock_id}", status_code=status.HTTP_200_OK)
-def update_stock_record(
-    stock_id: int, updates: stock_records, current_user: str = Depends(get_current_user)
+@router.patch("/{invoice_id}", status_code=status.HTTP_200_OK)
+def update_invoice(
+    invoice_id: int, updates: invoices, current_user: str = Depends(get_current_user)
 ):
     try:
         filtered_updates = updates.model_dump(exclude_unset=True, mode="json")
@@ -66,19 +67,19 @@ def update_stock_record(
         filtered_updates["updated_by"] = current_user
 
         response = (
-            supabase.table("stocking_records")
+            supabase.table("Invoices")
             .update(filtered_updates)
-            .eq("stock_id", stock_id)
+            .eq("invoice_id", invoice_id)
             .eq("recorded_by", current_user)
             .or_("is_deleted.is.null,is_deleted.eq.false")
-            .select("stock_id, pond_name, species, quantity, average_weight, stocking_date, supplier, status")
+            .select("invoice_id, customer, date, due_date, amount, status")
             .execute()
         )
 
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Stock record not found or unauthorized.",
+                detail="Invoice record not found or unauthorized.",
             )
 
         return response.data[0]
@@ -86,20 +87,20 @@ def update_stock_record(
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
-        print("Stock update error details:", error)
+        print("Invoice record update error details:", error)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error updating Stock records.",
+            detail="Error updating Invoice record.",
         )
 
 
-@router.delete("/{stock_id}", status_code=status.HTTP_200_OK)
-def delete_stock_record(stock_id: int, current_user: str = Depends(get_current_user)):
+@router.delete("/{invoice_id}", status_code=status.HTTP_200_OK)
+def delete_invoice(invoice_id: int, current_user: str = Depends(get_current_user)):
     try:
         response = (
-            supabase.table("stocking_records")
+            supabase.table("Invoices")
             .update({"is_deleted": True, "deleted_by": current_user})
-            .eq("stock_id", stock_id)
+            .eq("invoice_id", invoice_id)
             .eq("recorded_by", current_user)
             .or_("is_deleted.is.null,is_deleted.eq.false")
             .execute()
@@ -108,16 +109,15 @@ def delete_stock_record(stock_id: int, current_user: str = Depends(get_current_u
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="stock record not found or unauthorized.",
+                detail="Invoice record not found or unauthorized.",
             )
 
-        return {"message": f"Stock record with ID {stock_id} deleted successfully."}
+        return {"message": f"Invoice record with ID {invoice_id} deleted successfully."}
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
-        print("Stock deletion error details:", error)
+        print("Invoice record deletion error details:", error)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error deleting stock.",
+            detail="Error deleting invoice record.",
         )
-        
