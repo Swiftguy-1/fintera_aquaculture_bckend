@@ -11,9 +11,9 @@ def create_growth_rate(
     Growth_rate: growth_rate, current_user=Depends(get_current_user)
 ):
     try:
-        data = Growth_rate.mode_dump(mode="json")
+        data = Growth_rate.model_dump(mode="json")
         data["recorded_by"] = current_user
-        response = supabase.table("Growth_rate").insert(data).select("id, pond_name, species, sample_date, sample_count, av_weight, total_feed_used, feed_conversion_rate, specific_growth_rate").execute()
+        response = supabase.table("Growth_rate").insert(data).select("id, pond_name, species, sample_date, sample_count, avg_weight, total_feed_used, feed_conversion_rate, specific_growth_rate").execute()
         return response.data[0]
     except Exception as error:
         print("Growth rate creation Error Details:", error)
@@ -27,7 +27,7 @@ def create_growth_rate(
 def get_growth_rate(current_user=Depends(get_current_user)):
     try:
         response = (
-            supabase.table("Growth_rate").select("id, pond_name, species, sample_date, sample_count, av_weight, total_feed_used, feed_conversion_rate, specific_growth_rate").eq("recorded_by", current_user).or_("is_deleted.is.null,is_deleted.eq.false").execute()
+            supabase.table("Growth_rate").select("id, pond_name, species, sample_date, sample_count, avg_weight, total_feed_used, feed_conversion_rate, specific_growth_rate").eq("recorded_by", current_user).or_("is_deleted.is.null,is_deleted.eq.false").execute()
         )
         if not response.data:
             return {
@@ -66,7 +66,7 @@ def update_schedule(
             .eq("id", growth_id)
             .eq("recorded_by", current_user)
             .or_("is_deleted.is.null,is_deleted.eq.false")
-            .select("id, pond_name, species, sample_date, sample_count, av_weight, total_feed_used, feed_conversion_rate, specific_growth_rate")
+            .select("id, pond_name, species, sample_date, sample_count, avg_weight, total_feed_used, feed_conversion_rate, specific_growth_rate")
             .execute()
         )
 
@@ -105,7 +105,7 @@ def delete_growth_rate(growth_id: int, current_user: str = Depends(get_current_u
                 detail="Growth rate not found or unauthorized.",
             )
 
-         return {"message": f"Growth record with ID {expense_id} deleted successfully."}
+         return {"message": f"Growth record with ID {growth_id} deleted successfully."}
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
