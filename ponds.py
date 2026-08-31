@@ -130,7 +130,7 @@ def delete_pond_record(pond_id: int, current_user: str = Depends(get_current_use
                 detail="Pond record not found or unauthorized.",
             )
 
-        return {"message": f"Pond record with ID {expense_id} deleted successfully."}
+        return {"message": f"Pond record with ID {pond_id} deleted successfully."}
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
