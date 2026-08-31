@@ -108,7 +108,7 @@ def delete_sales_record(sales_id: int, current_user: str = Depends(get_current_u
                 detail="Sales not found or unauthorized.",
             )
 
-         return {"message": f"Sales record with ID {expense_id} deleted successfully."}
+         return {"message": f"Sales record with ID {sales_id} deleted successfully."}
     except HTTPException as http_err:
         raise http_err
     except Exception as error:
