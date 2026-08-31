@@ -107,7 +107,7 @@ def update_feed_inventory(
 
 @router.delete("/{feed_inventory_id}", status_code=status.HTTP_200_OK)
 def delete_feed_inventory(
-    feed_Inventory_id, current_user: str = Depends(get_current_user)
+    feed_inventory_id: int, current_user: str = Depends(get_current_user)
 ):
     try:
         response = (
