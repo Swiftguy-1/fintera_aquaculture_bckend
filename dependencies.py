@@ -19,10 +19,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         admin_username: str = payload.get("sub")
+        is_admin: bool = payload.get("is_admin", False) 
 
         if admin_username is None:
             raise credentials_exception
 
-        return admin_username
+        return {"admin_username":admin_username, "is_admin":is_admin}
     except InvalidTokenError:
         raise credentials_exception
