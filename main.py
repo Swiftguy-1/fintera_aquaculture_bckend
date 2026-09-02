@@ -109,7 +109,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 detail="Incorrect email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        access_token = create_access_token(data={"sub": db_admin["email"]})
+        access_token = create_access_token(data={"sub": db_admin["email"],"is_admin": db_admin.get("is_admin", False),}
+)
         return {"access_token": access_token, "token_type": "bearer"}
 
     except HTTPException as http_err:
