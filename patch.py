@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from dependencies import require_admin
-from database import supabase
+from db import supabase
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 
