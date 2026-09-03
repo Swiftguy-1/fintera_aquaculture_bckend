@@ -28,9 +28,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     except InvalidTokenError:
         raise credentials_exception
 
-def require_admin(current_user:dict=Depends(get_current_user.get("is_admin"):
-HTTPException(
-status_code= status.HTTP_403_FORBIDDEN,
-detail="Access denied. You are not an admin."
-)
-return current_user
+def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    if not current_user.get("is_admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You are not an admin.",
+        )
+    return current_user
