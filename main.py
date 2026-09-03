@@ -27,7 +27,7 @@ from user_mgt import router as mgt_router
 
 app = FastAPI(title="User Dashboard Security System")
 
-ALLOWED_ORIGINS=[fintera-app.vercel.app]
+ALLOWED_ORIGINS=["fintera-app.vercel.app","https://fintera-aquaculture-bckend.onrender.com"]
 
 app.add_middleware(
     CORSMiddleware,
