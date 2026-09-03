@@ -21,7 +21,7 @@ from user_sales import router as user_sales
 from ind_user import router as ind_router
 from patch import router as patch_router
 from recent_users import router as recent_router
-from txns import router as txn_router
+from tnxs import router as txn_router
 from user_mgt import router as mgt_router
 
 
