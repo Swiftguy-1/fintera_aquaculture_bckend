@@ -16,7 +16,7 @@ from feeding_schedule import router as schedule_router
 from expenses import router as exp_router
 from sales import router as sales_router
 from growth_rate import router as growth_router
-from get_user import router as users_router
+from user import router as users_router
 from user_sales import router as user_sales
 from ind_user import router as ind_router
 from patch import router as patch_router
