@@ -16,6 +16,14 @@ from feeding_schedule import router as schedule_router
 from expenses import router as exp_router
 from sales import router as sales_router
 from growth_rate import router as growth_router
+from users import router as users_router
+from user_sales import router as user_sales
+from ind_user import router as ind_router
+from patch import router as patch_router
+from recent_users import router as recent_router
+from txns import router as txn_router
+from user_mgt import router as mgt_router
+
 
 app = FastAPI(title="User Dashboard Security System")
 
@@ -38,6 +46,13 @@ app.include_router(schedule_router)
 app.include_router(exp_router)
 app.include_router(sales_router)
 app.include_router(growth_router)
+app.include_router(users_router)
+app.include_router(user_sales)
+app.include_router(ind_router)
+app.include_router(patch_router)
+app.include_router(recent_router)
+app.include_router(txn_router)
+app.include_router(mgt_router)
 
 
 class AdminSignUp(BaseModel):
