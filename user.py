@@ -12,8 +12,7 @@ def get_total_users(admin: dict = Depends(require_admin)):
             supabase.table("admin_table").select("id", count="exact").execute()
         )
 
-        total_users = response.count 
-        if response.count is not None else 0
+        total_users = response.count if response.count is not None else 0
         active_users = total_users 
         return {
             "total_users": total_users,
