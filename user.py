@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from auth import require_admin
+from dependencies import require_admin
 from database import supabase
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
